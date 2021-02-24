@@ -1,35 +1,94 @@
 const { response, request } = require("express");
+const bcryptjs = require('bcryptjs');
+const Usuario = require('../models/usuario');
 
-
-const usuariosGet = (req = request, res = response) => {
+const usuariosGet = async (req = request, res = response) => {
     
-    const { q, nombre = 'no name', apikey } = req.query;
+    const { limite = 5, desde = 0 } = req.query;
+    const query = { estado: true };
 
+    if ( isNaN(limite) || isNaN(desde) ) {
+        return res.status(400).json({
+            msg: 'Error en parametros. Debe ser un número entero',
+        });
+    }
+
+    const [ total, usuarios ] = await Promise.all([
+        Usuario.countDocuments( query ),
+        Usuario.find( query )
+            .skip ( Number(desde) )
+            .limit( Number(limite) )
+    ]);
+
+    const numRegistros = usuarios.length;
+    
     res.status(200).json({
-        msg: 'get API - Controlador',
-        q,
-        nombre,
-        apikey
+        total,
+        numRegistros,
+        usuarios,
     });
 };
-const usuariosPost = (req, res = response) => {
+const usuariosPost = async (req, res = response) => {
 
-    const { nombre, edad } = req.body;
+    const { nombre, correo, password, rol } = req.body;
+    const usuario = new Usuario( { nombre, correo, password, rol } );
+
+    // encriptar la contraseña
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync( password, salt);
+
+
+    try {
+        
+        await usuario.save();
+        
+        res.status(200).json({
+            msg: 'post API - Controlador',
+            usuario
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error POST usuarios',
+        });
+    }
+
 
     
-    res.status(200).json({
-        msg: 'post API - Controlador',
-        nombre, 
-        edad
-    });
 };
-const usuariosPut = (req, res = response) => {
-    const {id} = req.params;
+
+
+const usuariosPut = async (req, res = response) => {
+    const {idParam} = req.params;
+
+    const { _id, google, password, correo, id, rol, ...resto } = req.body;
+    console.log(idParam, id);
+    //TODO: validar que existe el id
+
+    if (password) {
+        // encriptar la contraseña
+        const salt = bcryptjs.genSaltSync();
+        resto.password = bcryptjs.hashSync( password, salt);
+    }
+
+    try {
+
+        const usuario = await Usuario.findByIdAndUpdate( idParam, resto, );
     
-    res.status(200).json({
-        msg: 'put API - Controlador',
-        id
-    });
+        // await usuario.save();
+    
+        return res.status(200).json( usuario );
+        
+    } catch (error) {
+
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error PUT usuarios',
+        });
+        
+    }
+
+    
 };
 const usuariosPatch = (req, res = response) => {
     
@@ -37,11 +96,19 @@ const usuariosPatch = (req, res = response) => {
         msg: 'Patch API - Controlador'
     });
 };
-const usuariosDelete = (req, res = response) => {
-    
+const usuariosDelete = async (req, res = response) => {
+    const { id } = req.params;
+
+    // Borrar físicamente
+    // const usuario = await Usuario.findByIdAndDelete( id );
+
+    const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
+
     res.status(200).json({
-        msg: 'Delete API - Controlador'
+        usuario
     });
+
+
 };
 
 module.exports = {
