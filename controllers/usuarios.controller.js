@@ -42,13 +42,13 @@ const usuariosPost = async (req, res = response) => {
         
         await usuario.save();
         
-        res.status(200).json({
+        return res.status(200).json({
             msg: 'post API - Controlador',
             usuario
         });
     } catch (error) {
         console.log(error);
-        res.status(500).json({
+        return res.status(500).json({
             msg: 'Error POST usuarios',
         });
     }
@@ -82,7 +82,7 @@ const usuariosPut = async (req, res = response) => {
     } catch (error) {
 
         console.log(error);
-        res.status(500).json({
+        return res.status(500).json({
             msg: 'Error PUT usuarios',
         });
         
@@ -102,11 +102,23 @@ const usuariosDelete = async (req, res = response) => {
     // Borrar físicamente
     // const usuario = await Usuario.findByIdAndDelete( id );
 
-    const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
+    try {
+        
+        const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
+    
+        return res.status(200).json({
+            usuario
+        });
 
-    res.status(200).json({
-        usuario
-    });
+    } catch (error) {
+
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error PUT usuarios',
+        });
+        
+    }
+
 
 
 };
