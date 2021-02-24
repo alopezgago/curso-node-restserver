@@ -13,20 +13,28 @@ const usuariosGet = async (req = request, res = response) => {
         });
     }
 
-    const [ total, usuarios ] = await Promise.all([
-        Usuario.countDocuments( query ),
-        Usuario.find( query )
-            .skip ( Number(desde) )
-            .limit( Number(limite) )
-    ]);
-
-    const numRegistros = usuarios.length;
+    try {
+        const [ total, usuarios ] = await Promise.all([
+            Usuario.countDocuments( query ),
+            Usuario.find( query )
+                .skip ( Number(desde) )
+                .limit( Number(limite) )
+        ]);
     
-    res.status(200).json({
-        total,
-        numRegistros,
-        usuarios,
-    });
+        const numRegistros = usuarios.length;
+        
+        return res.status(200).json({
+            total,
+            numRegistros,
+            usuarios,
+        });
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error POST usuarios',
+        });
+    }
 };
 const usuariosPost = async (req, res = response) => {
 
