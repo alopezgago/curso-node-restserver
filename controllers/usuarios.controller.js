@@ -71,7 +71,7 @@ const usuariosPut = async (req, res = response) => {
 
     const { _id, google, password, correo, id, rol, ...resto } = req.body;
     console.log(idParam, id);
-    //TODO: validar que existe el id
+    // validar que existe el id (hecho en la ruta)
 
     if (password) {
         // encriptar la contraseña
@@ -107,6 +107,9 @@ const usuariosPatch = (req, res = response) => {
 const usuariosDelete = async (req, res = response) => {
     const { id } = req.params;
 
+    // const uid = req.uid; // la uid se ha obtenido del token (en validar-jwt.js se asigna a la req)
+    // const usuarioAutenticado = req.usuario; // obtenido en validar-jwt
+
     // Borrar físicamente
     // const usuario = await Usuario.findByIdAndDelete( id );
 
@@ -115,14 +118,14 @@ const usuariosDelete = async (req, res = response) => {
         const usuario = await Usuario.findByIdAndUpdate( id, {estado: false} );
     
         return res.status(200).json({
-            usuario
+            usuario,
         });
 
     } catch (error) {
 
         console.log(error);
         return res.status(500).json({
-            msg: 'Error PUT usuarios',
+            msg: 'Error BAJA usuario',
         });
         
     }
